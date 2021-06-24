@@ -1,0 +1,2 @@
+BOTTOKEN=1234567
+MONGOURI=mongodb+srv://<user>:<password>@<cluster_name>.scblm.mongodb.net/<db_name>?retryWrites=true&w=majority

@@ -1,0 +1,20 @@
+{
+  "name": "package.json",
+  "version": "1.0.0",
+  "description": "Issun Boshi Discord Bot",
+  "main": "src/bot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "ted",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^12.5.3",
+    "dotenv": "^10.0.0",
+    "fs": "^0.0.1-security",
+    "moment-timezone": "^0.5.33",
+    "mongoose": "^5.12.14",
+    "node-fetch": "^2.6.1",
+    "node-schedule": "^2.0.0"
+  }
+}
