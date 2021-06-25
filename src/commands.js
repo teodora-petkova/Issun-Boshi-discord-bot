@@ -26,6 +26,7 @@ function commandHandler(client, message) {
 
     if (!client.commands.has(command)) {
         message.channel.sendError(`that\'s not a valid command name **${command}**!`)
+        return
     }
 
     try {
