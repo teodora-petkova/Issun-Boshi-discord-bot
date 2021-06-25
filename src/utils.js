@@ -7,7 +7,7 @@ Discord.Channel.prototype.sendEmbed = function (embeddedMessage) {
 
 Discord.Channel.prototype.sendInfo = function (description) {
     const embeddedMessage = new Discord.MessageEmbed()
-        .setTitle("Information")
+        .setTitle("Information :information_source:")
         .setDescription(description)
         .setColor("00ff00")
 
@@ -16,7 +16,7 @@ Discord.Channel.prototype.sendInfo = function (description) {
 
 Discord.Channel.prototype.sendError = function (description) {
     const embeddedMessage = new Discord.MessageEmbed()
-        .setTitle("Error")
+        .setTitle("Error :x:")
         .setDescription(description)
         .setColor("ff0000")
 

@@ -14,7 +14,8 @@ const scheduledMessageSchema = mongoose.Schema({
     url: requiredString,
     authorTag: requiredString,
     guildId: requiredString,
-    channelId: requiredString
+    channelId: requiredString,
+    mention: { type: String }
 })
 
 module.exports = mongoose.model('message', scheduledMessageSchema)
