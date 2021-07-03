@@ -47,6 +47,10 @@ function getValidMention(origMention, message) {
         }
         return origMention
     }
+    else if (mention === "@everyone" ||
+        mention === "@here") {
+        return mention
+    }
     else {
         message.channel.sendError(`The "${mention}" is an invalid user or role!`)
         return null
