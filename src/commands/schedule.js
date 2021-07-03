@@ -1,29 +1,25 @@
 const Discord = require('discord.js')
-const momentTimezone = require('moment-timezone')
 const schedule = require('node-schedule')
-const mongo = require('../mongo.js')
+const mongo = require('../db/mongo.js')
+const moment = require('../utils/moment.js')
 
-// remarks:
-// - schedule the last message before calling !schedule of the current user (calling the command)
+function isEmpty(str) {
+    return !str || str.length === 0 || !str.trim();
+}
 
-const isValidDate = (date) => {
+function isValidDateFormat(date) {
     const regex = /\d\d\d\d-\d{1,2}-\d{1,2}/
     const found = date.match(regex)
     return found != null
 }
 
-const isValidTime = (time) => {
+function isValidTimeFormat(time) {
     const regex = /\d{1,2}:\d\d/
     const found = time.match(regex)
     return found != null
 }
 
-const isFutureDate = (date) => {
-    var currentTime = new Date()
-    return (date > currentTime)
-}
-
-const getValidMention = (origMention, message) => {
+function getValidMention(origMention, message) {
     mention = origMention
 
     if (!mention)
@@ -57,7 +53,7 @@ const getValidMention = (origMention, message) => {
     }
 }
 
-const getLastMessage = async (message) => {
+async function getLastMessage(message) {
     const channelId = message.author.lastMessageChannelID
     const channel = message.guild.channels.cache.get(channelId)
     const messages = await channel.messages
@@ -70,7 +66,7 @@ const getLastMessage = async (message) => {
     return lastMessage
 }
 
-const postMessage = async (scheduledMessage, client, dueRemainder) => {
+async function postMessage(scheduledMessage, client, reminderName) {
     const { targetDate, content, url, authorTag, guildId, channelId, mention } = scheduledMessage
 
     const guild = await client.guilds.cache.get(guildId)
@@ -90,114 +86,111 @@ const postMessage = async (scheduledMessage, client, dueRemainder) => {
     if (mention)
         messageChannel.send(mention)
     const embeddedMessage = new Discord.MessageEmbed()
-        .setTitle(`Reminder :alarm_clock: ${dueRemainder}`)
-        .setDescription(content.substring(0, 200))
+        .setTitle(`Reminder :alarm_clock: ${reminderName}`)
+        .setDescription(content.substring(0, 200) + "...")
         .setURL(url)
         .setColor("ff0000")
         .setFooter(`requested by @${authorTag}`)
     messageChannel.sendEmbed(embeddedMessage)
 }
 
-const getDateAccordingToCurrentTime = async (targetDate) => {
-    // missed reminder (because of a server restart or sth else )
+async function scheduleMessageJob(scheduledMessage, client) {
 
-    date = targetDate
+    for (const reminder of scheduledMessage.reminders) {
 
-    var currentTime = new Date()
-    if (targetDate < currentTime) {
-        currentTime.setTime(currentTime.getTime() + 1000 * 60)
-        date = currentTime
+        const reminderDate = moment.getDateAccordingToCurrentTime(reminder.date)
+
+        console.log(`A reminder "${reminder.name}" is scheduled for "${reminderDate}" for the event on "${scheduledMessage.date}".`)
+
+        const job = schedule.scheduleJob(
+            reminderDate, async () => {
+                await postMessage(scheduledMessage, client, reminder.name)
+                await mongo.removeReminderFromScheduledMessage(scheduledMessage, reminder)
+                await mongo.removeMessageWithoutReminders(scheduledMessage)
+            })
     }
-
-    return date
 }
 
-const scheduleMessageJob = async (scheduledMessage, client) => {
+async function scheduleMessageJobWithInfo(scheduledMessage, client, channel) {
+    await scheduleMessageJob(scheduledMessage, client)
 
-    const eventDate = scheduledMessage.date
-
-    const oneMinute = 1000 * 60
-    const oneHour = oneMinute * 60
-    const oneDay = oneHour * 24
-
-    let dateOneHourBefore = await getDateAccordingToCurrentTime(eventDate - oneHour)
-    let dateOneDayBefore = await getDateAccordingToCurrentTime(eventDate - oneDay)
-
-    const jobOneDayBefore = schedule.scheduleJob(
-        dateOneDayBefore, async () => {
-            await postMessage(scheduledMessage, client, "Due in a day!")
-        })
-
-    const jobOneHourBefore = schedule.scheduleJob(
-        dateOneHourBefore, async () => {
-            await postMessage(scheduledMessage, client, "Due in an hour!")
-            await mongo.deleteScheduledMessageById(scheduledMessage)
-        })
-
-    return { eventDate, dateOneHourBefore, dateOneDayBefore }
+    const formattedDate = moment.getDateInTimeZone(scheduledMessage.date)
+    channel.sendInfo(`Reminders are scheduled for the [event](${scheduledMessage.url}) on ${formattedDate}!`)
 }
 
-const scheduleMessageJobWithInfo = async (scheduledMessage, client, channel) => {
-    const { eventDate, dateOneHourBefore, dateOneDayBefore } = await scheduleMessageJob(scheduledMessage, client)
-    const convertedDate = momentTimezone(eventDate)
-        .tz("Europe/Sofia")
-        .format('YYYY-MM-DD HH:mm A')
-    channel.sendInfo(`Reminders are scheduled for the [event](${scheduledMessage.url}) on ${convertedDate}!`)
-}
-
-const rescheduleAllMessages = async (client) => {
+async function rescheduleAllMessages(client) {
     const messages = await mongo.getAllScheduledMessages()
 
     for (const scheduledMessage of messages) {
 
-        scheduleMessageJob(scheduledMessage, client)
+        await scheduleMessageJob(scheduledMessage, client)
     }
 }
 
-const addScheduledMessageToDB = async (lastMessage, targetDate, targetMention) => {
+async function addScheduledMessageToDB(lastMessage, targetDate, targetMention) {
+
+    const dateOneHourBefore = moment.getDatePlusOneHour(targetDate)
+    const dateOneDayBefore = moment.getDatePlusOneDay(targetDate)
+
+    const reminders = [
+        {
+            _id: mongo.generateId(),
+            name: "Due in a day",
+            date: dateOneDayBefore
+        },
+        {
+            _id: mongo.generateId(),
+            name: "Due in an hour",
+            date: dateOneHourBefore
+        }]
 
     const scheduledMessage = {
+        _id: mongo.generateId(),
         date: targetDate,
         content: lastMessage.content,
         authorTag: lastMessage.author.tag,
         url: lastMessage.url,
         guildId: lastMessage.guild.id,
         channelId: lastMessage.channel.id,
-        mention: targetMention
+        mention: targetMention,
+        reminders: reminders
     }
 
-    return await mongo.insertScheduledMessage(scheduledMessage)
+    await mongo.insertScheduledMessage(scheduledMessage)
+
+    return scheduledMessage
 }
 
-const scheduleMessage = async (message, args) => {
+async function scheduleMessage(message, args) {
     const [date, time, clockType, mention] = args
 
-    if (!isValidDate(date)) {
+    if (isEmpty(date) || !isValidDateFormat(date)) {
         message.channel.sendError(`You must provide a correct date format (ex. 2021-06-06 or 2021-6-6), you provided "${date}."`)
         return
     }
 
-    if (!isValidTime(time)) {
+    if (isEmpty(time) || !isValidTimeFormat(time)) {
         message.channel.sendError(`You must provide a valid time format (ex. 1:23 or 01:23). you provided "${time}."`)
         return
     }
 
-    if (clockType !== 'AM' && clockType !== 'PM') {
+    if (isEmpty(clockType) || (clockType !== 'AM' && clockType !== 'PM')) {
         message.channel.sendError(`You must provide either "AM" or "PM", you provided "${clockType}."`)
         return
     }
 
-    const targetDate = momentTimezone.tz(
-        `${date} ${time} ${clockType}`,
-        'YYYY-MM-DD HH:mm A',
-        "Europe/Sofia")
-
-    const targetMention = getValidMention(mention, message)
-
-    if (!isFutureDate(targetDate)) {
-        message.channel.sendError(`You must provide a valid date in the future to be scheduled.`)
+    const targetDate = moment.parseDate(date, time, clockType)
+    if (!moment.isValidDate(targetDate)) {
+        message.channel.sendError(`You must provide a valid date, required format: "YYYY-MM-DD HH:mm (AM or PM)"!`)
         return
     }
+
+    if (!moment.isFutureDate(targetDate)) {
+        message.channel.sendError(`You must provide a valid date in the future to schedule a reminder.`)
+        return
+    }
+
+    const targetMention = getValidMention(mention, message)
 
     const lastMessage = await getLastMessage(message)
     if (!lastMessage) {
@@ -215,7 +208,7 @@ const scheduleMessage = async (message, args) => {
 
 module.exports = {
     name: 'schedule',
-    description: '!schedule saves an event for a particular date and reminds a day before.',
+    description: '!schedule saves an event based on the last message of the user executing the command for a particular date and reminds two times - a day and an hour before the event.',
     usage: '!schedule <the event date in the format "YYYY-MM-DD HH:mm (AM or PM)"> <@mention>',
     async execute(message, args) {
         await scheduleMessage(message, args)

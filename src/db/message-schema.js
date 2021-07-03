@@ -5,17 +5,26 @@ const requiredString = {
     required: true
 }
 
+const requiredDate = {
+    type: Date,
+    required: true
+}
+
 const scheduledMessageSchema = mongoose.Schema({
-    date: {
-        type: Date,
-        required: true
-    },
+    _id: mongoose.Schema.Types.ObjectId,
+    date: requiredDate,
     content: requiredString,
     url: requiredString,
     authorTag: requiredString,
     guildId: requiredString,
     channelId: requiredString,
-    mention: { type: String }
+    mention: { type: String },
+    reminders:
+        [{
+            _id: mongoose.Schema.Types.ObjectId,
+            name: requiredString,
+            date: requiredDate
+        }]
 })
 
 module.exports = mongoose.model('message', scheduledMessageSchema)

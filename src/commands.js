@@ -1,5 +1,5 @@
 const { prefix } = require('../config.json')
-const utils = require('./utils.js')
+const utils = require('./utils/messages.js')
 
 function getCommands() {
     const fs = require('fs')
