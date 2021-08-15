@@ -2,10 +2,7 @@ const Discord = require('discord.js')
 const schedule = require('node-schedule')
 const mongo = require('../db/mongo.js')
 const moment = require('../utils/moment.js')
-
-function isEmpty(str) {
-    return !str || str.length === 0 || !str.trim();
-}
+const { isEmpty } = require('../utils/utils.js')
 
 function isValidDateFormat(date) {
     const regex = /\d\d\d\d-\d{1,2}-\d{1,2}/
@@ -169,7 +166,7 @@ async function scheduleMessage(message, args) {
     const [date, time, clockType, mention] = args
 
     if (isEmpty(date) || !isValidDateFormat(date)) {
-        message.channel.sendError(`You must provide a correct date format (ex. 2021-06-06 or 2021-6-6), you provided "${date}."`)
+        message.channel.sendError(`You must provide a correct date format (ex. 2021-12-31, 2021-06-06/2021-6-6 etc.), you provided "${date}."`)
         return
     }
 

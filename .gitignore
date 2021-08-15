@@ -1,5 +1,11 @@
 node_modules/
 .env
-tests/
-src/commands/call.js
 src/commands/clearchat.js
+#ignoring tests for now - still in development
+src/ava_tests/
+src/tests/
+corde.config.json
+tsconfig.json
+yarn.lock
+.vscode
+package.json_for_tests

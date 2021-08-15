@@ -1,10 +1,9 @@
 const { prefix } = require('../config.json')
 const utils = require('./utils/messages.js')
+const fs = require('fs')
+const Discord = require('discord.js')
 
 function getCommands() {
-    const fs = require('fs')
-    const Discord = require('discord.js')
-
     const commands = new Discord.Collection()
 
     const commandFiles = fs.readdirSync('./src/commands/').filter(file => file.endsWith('.js'))
@@ -18,7 +17,7 @@ function getCommands() {
     return commands
 }
 
-function commandHandler(client, message) {
+async function commandHandler(client, message) {
     if (!message.content.startsWith(prefix) || message.author.bot) return
 
     const args = message.content.slice(prefix.length).trim().split(/ +/)
@@ -32,11 +31,11 @@ function commandHandler(client, message) {
     try {
 
         const cmd = client.commands.get(command)
-        cmd.execute(message, args)
+        await cmd.execute(message, args)
 
     } catch (error) {
         console.error(error)
-        message.channel.sendError(`There was an error trying to execute the command ${command}!`)
+        message.channel.sendError(`There was an unexpected error trying to execute the command ${command}!`)
     }
 }
 
