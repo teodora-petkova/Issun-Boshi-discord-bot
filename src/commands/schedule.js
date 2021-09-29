@@ -1,4 +1,4 @@
-const Discord = require('discord.js')
+const { Permissions, MessageEmbed } = require('discord.js')
 const schedule = require('node-schedule')
 const mongo = require('../db/mongo.js')
 const moment = require('../utils/moment.js')
@@ -57,8 +57,7 @@ function getValidMention(origMention, message) {
 async function getLastMessage(message) {
     const channelId = message.author.lastMessageChannelID
     const channel = message.guild.channels.cache.get(channelId)
-    const messages = await channel.messages
-        .fetch({ limit: 100 })
+    const messages = await channel.messages.fetch({ limit: 100 })
     const lastMessages = messages.filter(m =>
         m.author.id === message.author.id &&
         !m.content.includes('!schedule'))
@@ -86,7 +85,7 @@ async function postMessage(scheduledMessage, client, reminderName) {
     // pings of mentioned roles and users do not work inside an embedded message!
     if (mention)
         messageChannel.send(mention)
-    const embeddedMessage = new Discord.MessageEmbed()
+    const embeddedMessage = new MessageEmbed()
         .setTitle(`Reminder :alarm_clock: ${reminderName}`)
         .setDescription(content.substring(0, 200) + "...")
         .setURL(url)
@@ -211,6 +210,8 @@ module.exports = {
     name: 'schedule',
     description: '!schedule saves an event based on the last message of the user executing the command for a particular date and reminds two times - a day and an hour before the event.',
     usage: '!schedule <the event date in the format "YYYY-MM-DD HH:mm (AM or PM)"> <@mention>',
+    botPermissions: [Permissions.FLAGS.READ_MESSAGE_HISTORY],
+
     async execute(message, args) {
         await scheduleMessage(message, args)
     },
