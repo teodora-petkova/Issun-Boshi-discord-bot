@@ -7,5 +7,4 @@ src/tests/
 corde.config.json
 tsconfig.json
 yarn.lock
-.vscode
 package.json_for_tests
