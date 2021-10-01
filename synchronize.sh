@@ -1,0 +1,2 @@
+rsync -avz --progress --exclude='/.git*' --exclude="synchronize.sh" --filter=':- .gitignore' --include='.env' . pi@raspberrypi.local:~/discordbot
+rsync -vz --progress ./.env pi@raspberrypi.local:~/discordbot
