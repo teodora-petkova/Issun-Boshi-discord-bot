@@ -1,5 +1,5 @@
 const { Permissions, MessageEmbed } = require('discord.js')
-const { isEmpty } = require('../utils/utils.js')
+const { isEmpty, getRandom } = require('../utils/utils.js')
 
 async function getValidMessage(messageId, message) {
 
@@ -74,9 +74,19 @@ module.exports = {
             message.channel.sendEmbed(embeddedMessage)
         }
         else {
+            const users = missingUsersIds
+                .map(u => ":fire:" + u)
+                .join("\n")
+            const shameTenorGifs = [
+                "https://c.tenor.com/kq44BCZP88cAAAAC/the-lion-king-pumbaa.gif",
+                "https://c.tenor.com/S9BFrDY6FFcAAAAd/ashamed-shame.gif",
+                "https://c.tenor.com/JOlpyUIRzUcAAAAC/for-shame.gif"
+            ]
+            const titleWallofShame = ":regional_indicator_w: :regional_indicator_a: :regional_indicator_l: :regional_indicator_l:  :regional_indicator_o: :regional_indicator_f:  :regional_indicator_s: :regional_indicator_h: :regional_indicator_a: :regional_indicator_m: :regional_indicator_e:"
             const embeddedMessage = new MessageEmbed()
-                .setTitle(`Read and react with an emoji :loudspeaker:`)
-                .setDescription(`Pay attention to the [message](${messageData.url})! ${missingUsersIds.join(", ")}`)
+                .setTitle(`Read the message and react with an emoji :loudspeaker:`)
+                .setDescription(`${titleWallofShame}\n${users}\n`)
+                .setImage(getRandom(shameTenorGifs))
                 .setURL(messageData.url)
                 .setColor("ff0000")
             message.channel.sendEmbed(embeddedMessage)

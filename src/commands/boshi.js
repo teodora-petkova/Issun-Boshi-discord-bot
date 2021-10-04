@@ -1,4 +1,5 @@
 const Discord = require('discord.js')
+const { getRandom } = require('../utils/utils.js')
 
 module.exports = {
     name: 'boshi',
@@ -7,11 +8,10 @@ module.exports = {
 
     execute(message, args) {
         const replies = ['💖', ':blossom:', ':star:']
-        const index = Math.floor(Math.random() * replies.length)
 
         const embeddedMessage = new Discord.MessageEmbed()
             .setTitle("Greetings!")
-            .setDescription(replies[index])
+            .setDescription(getRandom(replies))
             .setColor("00ff00")
         message.channel.sendEmbed(embeddedMessage)
     }

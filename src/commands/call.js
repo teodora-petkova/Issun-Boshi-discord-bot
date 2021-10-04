@@ -16,7 +16,6 @@ function getValidVoiceChannel(origVoiceChannelName, message) {
         return voiceChannel
     }
     else {
-        message.channel.sendError(`The "<#${voiceChannelId}>" is an invalid voice channel!`)
         return null
     }
 }
@@ -33,10 +32,11 @@ module.exports = {
             message.channel.sendError(`You must provide a valid voice channel!`)
             return
         }
-        const voiceChannel = getValidVoiceChannel(voiceChannelName, message)
 
+        const voiceChannel = getValidVoiceChannel(voiceChannelName, message)
         if (!voiceChannel) {
-            message.channel.sendError(`You must provide a valid voice channel!`)
+
+            message.channel.sendError(`The "<#${voiceChannelName}>" is an invalid voice channel!`)
             return
         }
 
@@ -58,9 +58,12 @@ module.exports = {
             message.channel.sendInfo(`Everyone is available in the voice channel "<#${voiceChannel.id}>"!`)
         }
         else {
+            const members = missingMemberIds
+                .map(m => ":fire:" + m)
+                .join("\n")
             const embeddedMessage = new Discord.MessageEmbed()
                 .setTitle(`Call :loudspeaker:`)
-                .setDescription(`Come in the voice chat "<#${voiceChannel.id}>"! ${missingMemberIds.join(", ")}`)
+                .setDescription(`Come in the voice chat "<#${voiceChannel.id}>"!\n${members}`)
                 .setColor("ff0000")
             message.channel.sendEmbed(embeddedMessage)
         }
