@@ -47,7 +47,7 @@ async function commandHandler(client, message) {
     console.log(`Bot '${client.user.username}' in server '${message.guild.name}' channel '${message.channel.name}' permissions  for : ${botPermissions}`)
 
     if (!client.commands.has(command)) {
-        console.log(`that\'s not a valid command name **${command}**!`)
+        console.log(`that\'s not a valid command name "${command}"!`)
         return
     }
 

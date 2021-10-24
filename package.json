@@ -12,6 +12,7 @@
     "discord.js": "^12.5.3",
     "dotenv": "^10.0.0",
     "fs": "^0.0.1-security",
+    "googleapis": "^89.0.0",
     "moment-timezone": "^0.5.33",
     "mongoose": "^5.12.14",
     "node-fetch": "^2.6.1",
