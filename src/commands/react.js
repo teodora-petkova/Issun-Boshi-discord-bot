@@ -29,11 +29,11 @@ async function getReactedUserIds(messageData) {
     return uniqueReactedUsersIds
 }
 
-function getMissingUserIds(allChannelUsers, reactedUsersIds) {
+function getMissingUserIds(allChannelUsers, reactedUsersIds, messageCallerId) {
     let missingUsersIds = []
 
     for (const user of allChannelUsers) {
-        if (!reactedUsersIds.includes(user.id)) {
+        if (!reactedUsersIds.includes(user.id) && user.id != messageCallerId) {
             missingUsersIds.push(`<@${user.id}>`)
         }
     }
@@ -57,13 +57,13 @@ module.exports = {
         const messageData = await getValidMessage(messageId, message)
 
         if (!messageData) {
-            message.channel.sendError(`A message with '${messageId}' is not found in the channel!`)
+            message.channel.sendError(`A message with ID='${messageId}' is not found in the channel!`)
             return
         }
 
         const allChannelUsers = getAllChannelUsers(message.channel)
         const reactedUsersIds = await getReactedUserIds(messageData)
-        const missingUsersIds = getMissingUserIds(allChannelUsers, reactedUsersIds)
+        const missingUsersIds = getMissingUserIds(allChannelUsers, reactedUsersIds, message.author.id)
 
         if (missingUsersIds.length == 0) {
             const embeddedMessage = new MessageEmbed()
@@ -84,12 +84,14 @@ module.exports = {
             ]
             const titleWallofShame = ":regional_indicator_w: :regional_indicator_a: :regional_indicator_l: :regional_indicator_l:  :regional_indicator_o: :regional_indicator_f:  :regional_indicator_s: :regional_indicator_h: :regional_indicator_a: :regional_indicator_m: :regional_indicator_e:"
             const embeddedMessage = new MessageEmbed()
-                .setTitle(`Read the message and react with an emoji :loudspeaker:`)
-                .setDescription(`${titleWallofShame}\n${users}\n`)
+                .setTitle(`Read the message :loudspeaker:`)
+                .setDescription(`Read and react to the [message](${messageData.url}) with an emoji!`)
                 .setImage(getRandom(shameTenorGifs))
                 .setURL(messageData.url)
                 .setColor("ff0000")
             message.channel.sendEmbed(embeddedMessage)
+            // pings of mentioned roles and users do not work inside an embedded message!
+            message.channel.send(`${titleWallofShame}\n${users}\n`)
         }
     }
 }
