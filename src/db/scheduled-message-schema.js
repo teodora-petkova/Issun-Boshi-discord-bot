@@ -1,16 +1,7 @@
 const mongoose = require('mongoose')
+const { requiredString, requiredDate } = require('./dbtypes.js')
 
-const requiredString = {
-    type: String,
-    required: true
-}
-
-const requiredDate = {
-    type: Date,
-    required: true
-}
-
-const scheduledMessageSchema = mongoose.Schema({
+const ScheduledMessageSchema = mongoose.Schema({
     _id: mongoose.Schema.Types.ObjectId,
     date: requiredDate,
     content: requiredString,
@@ -27,4 +18,4 @@ const scheduledMessageSchema = mongoose.Schema({
         }]
 })
 
-module.exports = mongoose.model('message', scheduledMessageSchema)
+module.exports = mongoose.model('scheduledMessage', ScheduledMessageSchema)

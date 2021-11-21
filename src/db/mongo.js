@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
-const MessageSchema = require('./message-schema.js')
 const timestamps = require('../utils/moment.js')
+const ScheduledMessageSchema = require('./scheduled-message-schema.js')
 
 function getMessageId(message) {
     return `id:"${message._id}" date:"${message.date}"`
@@ -39,7 +39,7 @@ function generateId() {
 }
 
 async function insertScheduledMessage(scheduledMessage) {
-    await new MessageSchema(scheduledMessage).save()
+    await new ScheduledMessageSchema(scheduledMessage).save()
         .then(saveResult => {
             console.log(`Message ${getMessageId(scheduledMessage)} is added in DB.`)
         })
@@ -49,13 +49,13 @@ async function insertScheduledMessage(scheduledMessage) {
 }
 
 async function getAllScheduledMessages() {
-    return await MessageSchema.find({})
+    return await ScheduledMessageSchema.find({})
 }
 
 async function getMessage(scheduledMessage) {
     let message = undefined
     try {
-        message = await MessageSchema.findOne({ _id: scheduledMessage._id })
+        message = await ScheduledMessageSchema.findOne({ _id: scheduledMessage._id })
     }
     catch (err) {
         console.error(err, `Error while retrieving the message "${scheduledMessage.date}" from DB`);
@@ -82,7 +82,7 @@ async function removeMessageWithoutReminders(scheduledMessage) {
         ]
     }
 
-    await MessageSchema.deleteOne(queryNoReminders,
+    await ScheduledMessageSchema.deleteOne(queryNoReminders,
         (err, deleteOneResult) => {
             if (err) {
                 console.error(err, `Message  cannot be removed from DB.`)
@@ -105,7 +105,7 @@ async function removeMessageWithoutReminders(scheduledMessage) {
 }
 
 async function removeReminderFromScheduledMessage(scheduledMessage, reminder) {
-    await MessageSchema
+    await ScheduledMessageSchema
         .updateOne(
             { _id: scheduledMessage._id },
             { $pull: { reminders: { _id: reminder._id } } },
