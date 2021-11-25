@@ -1,6 +1,9 @@
 const mongoose = require('mongoose')
+const commands = require('../commands.js')
 const timestamps = require('../utils/moment.js')
+
 const ScheduledMessageSchema = require('./scheduled-message-schema.js')
+const UserCommandsUsageSchema = require('./user-commands-usage-schema.js')
 
 function getMessageId(message) {
     return `id:'${message._id}' date:'${message.date}'`
@@ -139,6 +142,175 @@ async function removeReminderFromScheduledMessage(scheduledMessage, reminder) {
     }
 }
 
+//  max 3 for a day - added one with the call of the command + 2 more
+const maxCountPerDay = 2
+function initUserCommand(commandName, date) {
+    return {
+        _id: generateId(),
+        name: commandName,
+        date: date,
+        count: maxCountPerDay
+    }
+}
+
+async function getUser(userId, guildId, channelId) {
+    let user = undefined
+    try {
+        user = await UserCommandsUsageSchema
+            .findOne({
+                userId: userId,
+                guildId: guildId,
+                channelId: channelId
+            })
+    }
+    catch (err) {
+        console.error(err, `An error while retrieving the user '${userId}' from DB`);
+    }
+    if (user) {
+        console.log(`User '${userId}' is found in DB.`)
+    }
+    else {
+        console.log(`User '${userId}' cannot be found in DB.`)
+    }
+    return user
+}
+
+function getUserCommand(user, commandName) {
+    let command = undefined
+    try {
+        command = user.commands.find(c => c.name == commandName)
+    }
+    catch (err) {
+        console.error(err, `An error while retrieving the command '${commandName}' for the user '${user.userId}' from DB.`);
+    }
+    if (command) {
+        console.log(`The command '${commandName}' for the user '${user.userId}' is found in DB.`)
+    }
+    else {
+        console.log(`The command '${commandName}' for the user '${user.userId}' cannot be found.`)
+    }
+    return command
+}
+
+async function addUserWithCommand(userId, guildId, channelId,
+    commandName, date) {
+
+    const newUserCommandsUsage = {
+        _id: generateId(),
+        userId: userId,
+        guildId: guildId,
+        channelId: channelId,
+        commands: [initUserCommand(commandName, date)]
+    }
+
+    try {
+        const saveResult = await new UserCommandsUsageSchema(newUserCommandsUsage).save()
+
+        if (saveResult) {
+            console.log(`User '${userId}' with command:'${commandName}' is added in DB.`)
+        }
+    } catch (err) {
+        console.error(err, `An error while adding an user '${userId}' with a command '${commandName}'.`)
+    }
+}
+
+async function addCommandForUser(userId, guildId, channelId,
+    commandName, date) {
+    try {
+        await UserCommandsUsageSchema
+            .updateOne(
+                {
+                    userId: userId,
+                    guildId: guildId,
+                    channelId: channelId,
+                    "commands.name": commandName,
+                },
+                { $push: { commands: [initUserCommand(commandName, date)] } })
+    }
+    catch (err) {
+        console.error(err, `An error while adding the command '${commandName}' for the user '${userId}'.`)
+    }
+    if (updateOneResult.ok === 1) {
+        if (updateOneResult.n === 1 &&
+            updateOneResult.nModified === 1) {
+            console.log(`The command '${commandName}' for the user '${userId}' is added in DB.`)
+        }
+        else {
+            console.log(`No user '${userId}' is found and no command is added in DB.`)
+        }
+    }
+    else {
+        console.log(`Unsuccessful operation: updateOne with adding a new command '${commandName}' for the user '${userId}'.`)
+    }
+}
+
+async function decrementCommandUsesCount(userId, guildId, channelId,
+    commandName) {
+    updateOneResult = undefined
+    try {
+        updateOneResult = await UserCommandsUsageSchema
+            .updateOne(
+                {
+                    userId: userId,
+                    guildId: guildId,
+                    channelId: channelId,
+                    'commands.name': commandName
+                },
+                { $inc: { 'commands.$.count': -1 } })
+    }
+    catch (err) {
+        console.error(err, `An error while decrementing the count of uses of the command '${commandName}' for the user '${userId}' in DB.`)
+    }
+
+    if (updateOneResult.ok === 1) {
+        if (updateOneResult.n === 1 &&
+            updateOneResult.nModified === 1) {
+            console.log(`The count of command '${commandName}' for the user '${userId}' is decremented in DB.`)
+        }
+        else {
+            console.log(`No command '${commandName}' for the user '${userId}' is found and updated in DB.`)
+        }
+    }
+    else {
+        console.log(`Unsuccessful operation: updateOne for the command '${commandName}' for the user '${userId}'.`)
+    }
+}
+
+async function resetCommandForUser(userId, guildId, channelId,
+    commandName, date) {
+    try {
+        await UserCommandsUsageSchema
+            .updateOne(
+                {
+                    userId: userId,
+                    guildId: guildId,
+                    channelId: channelId,
+                    "commands.name": commandName,
+                },
+                {
+                    $set:
+                    {
+                        "commands.$.date": date,
+                        "commands.$.count": maxCountPerDay
+                    }
+                })
+    }
+    catch (err) {
+        console.error(err, `An error while reseting the count of uses of the command:'${commandName}' for the user '${userId}' in DB.`)
+    } if (updateOneResult.ok === 1) {
+        if (updateOneResult.n === 1 &&
+            updateOneResult.nModified === 1) {
+            console.log(`The command '${commandName}' for the user '${userId}' is reset with the max count and the current date in DB.`)
+        }
+        else {
+            console.log(`No user '${userId}' is found and no command is updated in DB.`)
+        }
+    }
+    else {
+        console.log(`Unsuccessful operation: updateOne for reseting the command '${commandName}' for the user '${userId}'.`)
+    }
+}
+
 module.exports =
 {
     // basic DB functions
@@ -151,4 +323,12 @@ module.exports =
     getAllScheduledMessages,
     removeMessageWithoutReminders,
     removeReminderFromScheduledMessage,
+
+    // keeping track of the used commands for an user (because of limits per day)
+    getUser,
+    getUserCommand,
+    addUserWithCommand,
+    addCommandForUser,
+    resetCommandForUser,
+    decrementCommandUsesCount
 }

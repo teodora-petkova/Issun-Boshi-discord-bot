@@ -3,6 +3,7 @@ const fetch = require('node-fetch')
 const { parsed, error } = require('dotenv').config()
 const { google } = require('googleapis');
 const { isEmpty, getRandom } = require('../utils/utils.js');
+const limits = require('../utils/limits.js')
 
 async function getAllFileIdsByFolderName(resource) {
 
@@ -53,7 +54,7 @@ async function getAllFileIdsByFolderName(resource) {
     return filesByFolderName
 }
 
-function getImages(imageIdsByFolderName, prompt) {
+function getImageIdsByPrompt(imageIdsByFolderName, prompt) {
     if (!isEmpty(prompt) && Object.keys(imageIdsByFolderName).includes(prompt)) {
         images = imageIdsByFolderName[prompt]
     }
@@ -67,7 +68,7 @@ function getImages(imageIdsByFolderName, prompt) {
 async function showPrompts(message, prompt, resource) {
 
     let imageIdsByFolderName = await getAllFileIdsByFolderName(resource)
-    let images = getImages(imageIdsByFolderName, prompt)
+    let images = getImageIdsByPrompt(imageIdsByFolderName, prompt)
 
     if (images != undefined && images.length == 0) {
         message.channel.sendError(`No available images found!`)
@@ -120,22 +121,27 @@ module.exports = {
     usage: `!artme with an optional prompt among [${availablePrompts.join(', ')}]`,
 
     async execute(message, args) {
-        const resource = {
-            auth: process.env.GOOGLE_API_KEY,
-            id: process.env.GOOGLE_API_FOLDER_ID
-        };
-        const [prompt] = args
+        const commandName = this.name
 
-        if (!isEmpty(prompt) && !availablePrompts.includes(prompt)) {
-            message.channel.sendError(`You must provide no prompt or an available prompt: ${availablePrompts.join(', ')}!`)
-            return
-        }
+        const isDailyLimitReached = await limits.isDailyLimitForCommandReached(message, commandName)
+        if (!isDailyLimitReached) {
+            const resource = {
+                auth: process.env.GOOGLE_API_KEY,
+                id: process.env.GOOGLE_API_FOLDER_ID
+            };
+            const [prompt] = args
 
-        if (prompt == 'dog') {
-            await showDog(message);
-        }
-        else {
-            await showPrompts(message, prompt, resource)
+            if (!isEmpty(prompt) && !availablePrompts.includes(prompt)) {
+                message.channel.sendError(`You must provide no prompt or an available prompt: ${availablePrompts.join(', ')}!`)
+                return
+            }
+
+            if (prompt == 'dog') {
+                await showDog(message);
+            }
+            else {
+                await showPrompts(message, prompt, resource)
+            }
         }
     }
 }

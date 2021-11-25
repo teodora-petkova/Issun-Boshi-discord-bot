@@ -8,7 +8,17 @@ const requiredDate = {
     required: true
 }
 
+const number = {
+    type: Number,
+    required: true,
+    validate: {
+        validator: Number.isInteger,
+        message: '{VALUE} is not an integer value'
+    }
+}
+
 module.exports = {
     requiredString,
-    requiredDate
+    requiredDate,
+    number
 }
