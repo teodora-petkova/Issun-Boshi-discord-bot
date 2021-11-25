@@ -156,7 +156,7 @@ async function addScheduledMessageToDB(lastMessage, targetDate, targetMention) {
         reminders: reminders
     }
 
-    await mongo.insertScheduledMessage(scheduledMessage)
+    await mongo.addScheduledMessage(scheduledMessage)
 
     return scheduledMessage
 }

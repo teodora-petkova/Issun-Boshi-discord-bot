@@ -50,13 +50,19 @@ function isFutureDate(inputDate) {
     return momentTimezone(inputDate).isAfter(now())
 }
 
+function getDiffWithTodayInDays(date) {
+    return momentTimezone(now()).diff(momentTimezone(date), 'days')
+}
+
 module.exports =
 {
+    now,
     parseDate,
     isValidDate,
     isFutureDate,
     getDatePlusOneDay,
     getDatePlusOneHour,
     getDateAccordingToCurrentTime,
-    getDateInTimeZone
+    getDateInTimeZone,
+    getDiffWithTodayInDays
 }
