@@ -121,9 +121,11 @@ async function scheduleMessageJobWithInfo(scheduledMessage, client, channel) {
 async function rescheduleAllMessages(client) {
     const messages = await mongo.getAllScheduledMessages()
 
-    for (const scheduledMessage of messages) {
+    if (messages) {
+        for (const scheduledMessage of messages) {
 
-        await scheduleMessageJob(scheduledMessage, client)
+            await scheduleMessageJob(scheduledMessage, client)
+        }
     }
 }
 
