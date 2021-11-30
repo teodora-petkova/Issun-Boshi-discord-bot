@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------------------
 Ameliorations:
 -----------------------------------------------------------------------------------------------------------------------------
-- to think of a way to delete old records for users commands usage in DB 
+- to think of a way to delete old records for users commands usage in DB (to read about TTL indices in Mongo DB!!)
 in order not to have too much records at some point for the users that are not using the server or are not in the course anymore
 (maybe query everything on restart (will it be too slow?!) and remove all records with old dates for commands)
 
@@ -13,14 +13,15 @@ Export to Raspberry PI (to have in mind):
 - make/update current script for installing and running everything on raspberry pi
    = to (re)start on the restart of the raspberry pi
    = to update automatically on any change from github
-   = to have some easy way to ask and edit env file (?)
+   = to have some easy way to edit env file (?)
+   = to add an option to log in a file, as well (how to save it for a specific time for subsequent debugging?)
 
 -----------------------------------------------------------------------------------------------------------------------------
 New ideas and functionality:
 -----------------------------------------------------------------------------------------------------------------------------
 - the Liybo's idea for real+digital stickers for #n successfully finished challenges
   = description: every user will participate in different challenges and if their count reaches for example 10 challenges, he will receive some stickers/emojis
-  = how to:
+  = how:
     - add a command <!challenge @Ani @Liybo @Yasi> enumerating all the users that successfully finish the current challenge (at the end of it)
     - the command can be called only by people with some role - administrative/moderator
     - for example: 3 levels, after 10 challenges you go one level up, and you receive an access to 10 emojis as you have a new assigned role by the bot
@@ -31,24 +32,45 @@ New ideas and functionality:
     - api for emojis: https://discord.com/developers/docs/resources/emoji to define the emojis by role
   = to be decided: is it ok to have for example another 3 new roles in the server? 
 
+- an idea for exercises based on text prompts for characters/emotions/settings etc.
+  = description: every user can call an exercise to draw a character based on hero, emotion, setting etc. and a random prompt will show up
+  = how:
+    - an idea for an update for the google drive folder tree:
+          - bot
+             - prompts
+                 - clothing
+                 - hands
+                 - palette
+             - exercises (it will be easier to have txt files!)
+                 - hero.txt
+                 - emotion.txt
+                 - confict.txt
+
+    - a command <!exercise hero> returns -> Fairy, Ninja и т.н.
+    - аnother option: <!еxercise hero @Friends> returns а list/table (excluding the caller!) ->
+          @Ani - Fairy 
+          @Liybo - Ninja
+          @Yasi - Superhero
+          ..................
+        
 - a moderation functionality - the bot will be looking for following strictly the rules :D - no too much pictures in the common channel or too much English words/whole sentences
     = an example: https://mee6.xyz/moderation
-    = how to:
+    = how:
         - for example each person has a limit of 5 pictures in the common chat, after that:
             - an error message is sent
             - the image is deleted
             - maybe the person is muted for the end of the day in the common chat
-            - 
+            
         - it can be set for a specific guild and channel
         - maybe also use similar moderation in the "introduction server" if users start discussing instead of only posting pictures with discriptions of themselves
 
 - a functionality for the rules 
     = an example: https://support.discord.com/hc/en-us/community/posts/360066916452-Built-in-Agree-to-Rules-function
-    = how to:
+    = how:
         - there will be one more role - "everyone_before_accepting_rules" - every new user has that role only with permissions to see the channel with the rules
         - after reading and reacting to the rules, the user will receive the current "everyone" role with the basic permissions
 
-- Secret Santa (for cards/challenges) - sends DMs for who's is whose Santa? (maybe with a table for the moderator who is calling the method?)
+- Secret Santa (for cards/challenges) - sends DMs? (maybe with a table for the moderator who is calling the method?)
 
 - GAN of two styles/pictures (are only two pictures enough) or something simpler with AI 
     = an example: https://www.youtube.com/watch?v=UjDpW_SOrlw
@@ -58,7 +80,8 @@ New ideas and functionality:
 -----------------------------------------------------------------------------------------------------------------------------
 Code refactoring / Developing stuff
 -----------------------------------------------------------------------------------------------------------------------------
-- !artme feet with a new folder 'feet' should work but the description of the command stays the same (how to make the description dynamically)
+- !artme feet with a new folder 'feet' should work but the description of the command stays the same (how to make the description dynamically?)
 - to split mongo.js into separate modules?
 - to read about and integrate unit tests for the discord bot (jest?)
-- to investigate whether there are any restrictions for number of queries a day or mb in mongodb (although at some point the DB can be just on the raspberry pi)
+- to investigate whether there are any restrictions for the number of queries a day or mb in mongodb 
+  (although at some point the DB might be just on the raspberry pi, but maybe slower from SD card?)
