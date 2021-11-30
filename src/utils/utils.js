@@ -1,8 +1,8 @@
-function isEmpty(str) {
-    return !str || str.length === 0 || !str.trim();
+function isEmpty (str) {
+    return !str || str.length === 0 || !str.trim()
 }
 
-function getRandom(arr) {
+function getRandom (arr) {
     const index = Math.floor(Math.random() * arr.length)
     return arr[index]
 }

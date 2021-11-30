@@ -1,8 +1,7 @@
 const { Permissions, MessageEmbed } = require('discord.js')
 const { isEmpty, getRandom } = require('../utils/utils.js')
 
-async function getValidMessage(messageId, message) {
-
+async function getValidMessage (messageId, message) {
     let messageData = null
     try {
         messageData = await message.channel.messages.fetch(messageId)
@@ -12,11 +11,11 @@ async function getValidMessage(messageId, message) {
     return messageData
 }
 
-function getAllChannelUsers(messageChannel) {
-    return messageChannel.members.filter(m => m.id && m.user.bot == false).array()
+function getAllChannelUsers (messageChannel) {
+    return messageChannel.members.filter(m => m.id && m.user.bot === false).array()
 }
 
-async function getReactedUserIds(messageData) {
+async function getReactedUserIds (messageData) {
     let reactedUsersIds = []
 
     for (const reaction of messageData.reactions.cache.array()) {
@@ -29,11 +28,11 @@ async function getReactedUserIds(messageData) {
     return uniqueReactedUsersIds
 }
 
-function getMissingUserIds(allChannelUsers, reactedUsersIds, messageCallerId) {
-    let missingUsersIds = []
+function getMissingUserIds (allChannelUsers, reactedUsersIds, messageCallerId) {
+    const missingUsersIds = []
 
     for (const user of allChannelUsers) {
-        if (!reactedUsersIds.includes(user.id) && user.id != messageCallerId) {
+        if (!reactedUsersIds.includes(user.id) && user.id !== messageCallerId) {
             missingUsersIds.push(`<@${user.id}>`)
         }
     }
@@ -46,12 +45,11 @@ module.exports = {
     usage: '!react <message.id>',
     botPermissions: [Permissions.FLAGS.READ_MESSAGE_HISTORY],
 
-    async execute(message, args) {
-
+    async execute (message, args) {
         const [messageId] = args
 
         if (isEmpty(messageId)) {
-            message.channel.sendError(`You must provide a valid message id!`)
+            message.channel.sendError('You must provide a valid message id!')
             return
         }
         const messageData = await getValidMessage(messageId, message)
@@ -65,30 +63,29 @@ module.exports = {
         const reactedUsersIds = await getReactedUserIds(messageData)
         const missingUsersIds = getMissingUserIds(allChannelUsers, reactedUsersIds, message.author.id)
 
-        if (missingUsersIds.length == 0) {
+        if (missingUsersIds.length === 0) {
             const embeddedMessage = new MessageEmbed()
-                .setTitle("Information :information_source:")
+                .setTitle('Information :information_source:')
                 .setDescription(`Everyone has reacted to the [message](${messageData.url})!`)
-                .setColor("00ff00")
+                .setColor('00ff00')
                 .setURL(messageData.url)
             message.channel.sendEmbed(embeddedMessage)
-        }
-        else {
+        } else {
             const users = missingUsersIds
-                .map(u => ":fire:" + u)
-                .join("\n")
+                .map(u => ':fire:' + u)
+                .join('\n')
             const shameTenorGifs = [
-                "https://c.tenor.com/kq44BCZP88cAAAAC/the-lion-king-pumbaa.gif",
-                "https://c.tenor.com/S9BFrDY6FFcAAAAd/ashamed-shame.gif",
-                "https://c.tenor.com/JOlpyUIRzUcAAAAC/for-shame.gif"
+                'https://c.tenor.com/kq44BCZP88cAAAAC/the-lion-king-pumbaa.gif',
+                'https://c.tenor.com/S9BFrDY6FFcAAAAd/ashamed-shame.gif',
+                'https://c.tenor.com/JOlpyUIRzUcAAAAC/for-shame.gif'
             ]
-            const titleWallofShame = ":regional_indicator_w: :regional_indicator_a: :regional_indicator_l: :regional_indicator_l:  :regional_indicator_o: :regional_indicator_f:  :regional_indicator_s: :regional_indicator_h: :regional_indicator_a: :regional_indicator_m: :regional_indicator_e:"
+            const titleWallofShame = ':regional_indicator_w: :regional_indicator_a: :regional_indicator_l: :regional_indicator_l:  :regional_indicator_o: :regional_indicator_f:  :regional_indicator_s: :regional_indicator_h: :regional_indicator_a: :regional_indicator_m: :regional_indicator_e:'
             const embeddedMessage = new MessageEmbed()
-                .setTitle(`Read the message :loudspeaker:`)
+                .setTitle('Read the message :loudspeaker:')
                 .setDescription(`Read and react to the [message](${messageData.url}) with an emoji!`)
                 .setImage(getRandom(shameTenorGifs))
                 .setURL(messageData.url)
-                .setColor("ff0000")
+                .setColor('ff0000')
             message.channel.sendEmbed(embeddedMessage)
             // pings of mentioned roles and users do not work inside an embedded message!
             message.channel.send(`${titleWallofShame}\n${users}\n`)

@@ -6,7 +6,7 @@ module.exports = {
     description: 'List all of my commands or info about a specific command.',
     usage: '!help or !help <the command name without a prefix>',
 
-    execute(message, args) {
+    execute (message, args) {
         const data = []
         const { commands } = message.client
 
@@ -17,15 +17,13 @@ module.exports = {
             data.push(`\nYou can send \`${prefix}help [command name]\` to get info on a specific command!`)
 
             return message.channel.sendInfo(data)
-        }
-        else {
+        } else {
             const name = args[0].toLowerCase()
             const command = commands.get(name) || commands.find(c => c.aliases && c.aliases.includes(name))
 
             if (!command) {
-                return message.channel.sendError(`that\'s not a valid command name **${name}**!`)
-            }
-            else {
+                return message.channel.sendError(`that's not a valid command name **${name}**!`)
+            } else {
                 data.push(`**Name:** ${command.name}`)
 
                 if (command.aliases) data.push(`**Aliases:** ${command.aliases.join(', ')}`)

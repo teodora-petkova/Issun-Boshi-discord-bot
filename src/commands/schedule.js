@@ -4,23 +4,22 @@ const mongo = require('../db/mongo.js')
 const moment = require('../utils/moment.js')
 const { isEmpty } = require('../utils/utils.js')
 
-function isValidDateFormat(date) {
+function isValidDateFormat (date) {
     const regex = /\d\d\d\d-\d{1,2}-\d{1,2}/
     const found = date.match(regex)
     return found != null
 }
 
-function isValidTimeFormat(time) {
+function isValidTimeFormat (time) {
     const regex = /\d{1,2}:\d\d/
     const found = time.match(regex)
     return found != null
 }
 
-function getValidMention(origMention, message) {
-    mention = origMention
+function getValidMention (origMention, message) {
+    let mention = origMention
 
-    if (!mention)
-        return null
+    if (!mention) { return null }
 
     if (mention.startsWith('<@') && mention.endsWith('>')) {
         mention = mention.slice(2, -1)
@@ -36,25 +35,23 @@ function getValidMention(origMention, message) {
         if (!user) {
             const concatArrays = (a, b) => { return a.concat(b) }
             const allRoles = message.client.guilds.cache.array().map(g => g.roles.cache.array()).reduce(concatArrays)
-            const role = allRoles.find(r => r.id == mention);
+            const role = allRoles.find(r => r.id === mention)
             if (!role) {
                 message.channel.sendError(`The "${mention}" is an invalid user or role!`)
                 return null
             }
         }
         return origMention
-    }
-    else if (mention === "@everyone" ||
-        mention === "@here") {
+    } else if (mention === '@everyone' ||
+        mention === '@here') {
         return mention
-    }
-    else {
+    } else {
         message.channel.sendError(`The "${mention}" is an invalid user or role!`)
         return null
     }
 }
 
-async function getLastMessage(message) {
+async function getLastMessage (message) {
     const channelId = message.author.lastMessageChannelID
     const channel = message.guild.channels.cache.get(channelId)
     const messages = await channel.messages.fetch({ limit: 100 })
@@ -66,7 +63,7 @@ async function getLastMessage(message) {
     return lastMessage
 }
 
-async function postMessage(scheduledMessage, client, reminderName) {
+async function postMessage (scheduledMessage, client, reminderName) {
     const { targetDate, content, url, authorTag, guildId, channelId, mention } = scheduledMessage
 
     const guild = await client.guilds.cache.get(guildId)
@@ -83,26 +80,23 @@ async function postMessage(scheduledMessage, client, reminderName) {
     }
 
     // pings of mentioned roles and users do not work inside an embedded message!
-    if (mention)
-        messageChannel.send(mention)
+    if (mention) { messageChannel.send(mention) }
     const embeddedMessage = new MessageEmbed()
         .setTitle(`Reminder :alarm_clock: ${reminderName}`)
-        .setDescription(content.substring(0, 200) + "...")
+        .setDescription(content.substring(0, 200) + '...')
         .setURL(url)
-        .setColor("ff0000")
+        .setColor('ff0000')
         .setFooter(`requested by @${authorTag}`)
     messageChannel.sendEmbed(embeddedMessage)
 }
 
-async function scheduleMessageJob(scheduledMessage, client) {
-
+async function scheduleMessageJob (scheduledMessage, client) {
     for (const reminder of scheduledMessage.reminders) {
-
         const reminderDate = moment.getDateAccordingToCurrentTime(reminder.date)
 
         console.log(`A reminder "${reminder.name}" is scheduled for "${reminderDate}" for the event on "${scheduledMessage.date}".`)
 
-        const job = schedule.scheduleJob(
+        schedule.scheduleJob(
             reminderDate, async () => {
                 await postMessage(scheduledMessage, client, reminder.name)
                 await mongo.removeReminderFromScheduledMessage(scheduledMessage, reminder)
@@ -111,38 +105,36 @@ async function scheduleMessageJob(scheduledMessage, client) {
     }
 }
 
-async function scheduleMessageJobWithInfo(scheduledMessage, client, channel) {
+async function scheduleMessageJobWithInfo (scheduledMessage, client, channel) {
     await scheduleMessageJob(scheduledMessage, client)
 
     const formattedDate = moment.getDateInTimeZone(scheduledMessage.date)
     channel.sendInfo(`Reminders are scheduled for the [event](${scheduledMessage.url}) on ${formattedDate}!`)
 }
 
-async function rescheduleAllMessages(client) {
+async function rescheduleAllMessages (client) {
     const messages = await mongo.getAllScheduledMessages()
 
     if (messages) {
         for (const scheduledMessage of messages) {
-
             await scheduleMessageJob(scheduledMessage, client)
         }
     }
 }
 
-async function addScheduledMessageToDB(lastMessage, targetDate, targetMention) {
-
+async function addScheduledMessageToDB (lastMessage, targetDate, targetMention) {
     const dateOneHourBefore = moment.getDatePlusOneHour(targetDate)
     const dateOneDayBefore = moment.getDatePlusOneDay(targetDate)
 
     const reminders = [
         {
             _id: mongo.generateId(),
-            name: "Due in a day",
+            name: 'Due in a day',
             date: dateOneDayBefore
         },
         {
             _id: mongo.generateId(),
-            name: "Due in an hour",
+            name: 'Due in an hour',
             date: dateOneHourBefore
         }]
 
@@ -163,7 +155,7 @@ async function addScheduledMessageToDB(lastMessage, targetDate, targetMention) {
     return scheduledMessage
 }
 
-async function scheduleMessage(message, args) {
+async function scheduleMessage (message, args) {
     const [date, time, clockType, mention] = args
 
     if (isEmpty(date) || !isValidDateFormat(date)) {
@@ -183,12 +175,12 @@ async function scheduleMessage(message, args) {
 
     const targetDate = moment.parseDate(date, time, clockType)
     if (!moment.isValidDate(targetDate)) {
-        message.channel.sendError(`You must provide a valid date, required format: "YYYY-MM-DD HH:mm (AM or PM)"!`)
+        message.channel.sendError('You must provide a valid date, required format: "YYYY-MM-DD HH:mm (AM or PM)"!')
         return
     }
 
     if (!moment.isFutureDate(targetDate)) {
-        message.channel.sendError(`You must provide a valid date in the future to schedule a reminder.`)
+        message.channel.sendError('You must provide a valid date in the future to schedule a reminder.')
         return
     }
 
@@ -201,7 +193,7 @@ async function scheduleMessage(message, args) {
     }
 
     try {
-        let scheduledMessage = await addScheduledMessageToDB(lastMessage, targetDate, targetMention)
+        const scheduledMessage = await addScheduledMessageToDB(lastMessage, targetDate, targetMention)
         await scheduleMessageJobWithInfo(scheduledMessage, message.client, message.channel)
     } catch (err) {
         console.error(err)
@@ -214,7 +206,7 @@ module.exports = {
     usage: '!schedule <the event date in the format "YYYY-MM-DD HH:mm (AM or PM)"> <@mention>',
     botPermissions: [Permissions.FLAGS.READ_MESSAGE_HISTORY],
 
-    async execute(message, args) {
+    async execute (message, args) {
         await scheduleMessage(message, args)
     },
     rescheduleAllMessages: rescheduleAllMessages

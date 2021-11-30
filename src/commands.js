@@ -1,28 +1,27 @@
 const { prefix } = require('../config.json')
-const utils = require('./utils/messages.js')
+require('./utils/messages.js')
 const fs = require('fs')
 const { Collection, Permissions } = require('discord.js')
 
-function convertPermissionsFromBitsToString(permissions) {
+function convertPermissionsFromBitsToString (permissions) {
     return permissions
         .map(perm => new Permissions(perm).toArray())
         .reduce((a, b) => a.concat(b))
         .join(', ')
 }
 
-function checkForMissingPermissions(message, messageUser, user, requiredPermissions) {
-
-    let actualPermissions = message.channel.permissionsFor(messageUser);
+function checkForMissingPermissions (message, messageUser, user, requiredPermissions) {
+    const actualPermissions = message.channel.permissionsFor(messageUser)
     if (!actualPermissions.has(requiredPermissions)) {
-        let missingPermissionsAsBits = requiredPermissions.filter(perm => actualPermissions.has(perm) === false)
-        let missingPermissions = convertPermissionsFromBitsToString(missingPermissionsAsBits)
+        const missingPermissionsAsBits = requiredPermissions.filter(perm => actualPermissions.has(perm) === false)
+        const missingPermissions = convertPermissionsFromBitsToString(missingPermissionsAsBits)
         message.channel.sendError(`The command cannot be executed because of missing permissions for *${user}*: ${missingPermissions}!`)
         return false
     }
     return true
 }
 
-function getCommands() {
+function getCommands () {
     const commands = new Collection()
 
     const commandFiles = fs.readdirSync('./src/commands/').filter(file => file.endsWith('.js'))
@@ -36,7 +35,7 @@ function getCommands() {
     return commands
 }
 
-async function commandHandler(client, message) {
+async function commandHandler (client, message) {
     if (!message.content.startsWith(prefix) || message.author.bot) return
 
     const args = message.content.slice(prefix.length).trim().split(/ +/)
@@ -47,19 +46,19 @@ async function commandHandler(client, message) {
     console.log(`Bot '${client.user.username}' in server '${message.guild.name}' channel '${message.channel.name}' permissions  for : ${botPermissions}`)
 
     if (!client.commands.has(command)) {
-        console.log(`that\'s not a valid command name "${command}"!`)
+        console.log(`that's not a valid command name "${command}"!`)
         return
     }
 
     try {
         const cmd = client.commands.get(command)
 
-        //defaultBotPermissions = [Permissions.FLAGS.VIEW_CHANNEL, Permissions.FLAGS.SEND_MESSAGES, Permissions.FLAGS.EMBED_LINKS]
-        //defaultUserPermissions = [Permissions.FLAGS.VIEW_CHANNEL, Permissions.FLAGS.SEND_MESSAGES]
-        //botPermissions = defaultBotPermissions.concat(cmd.botPermissions)
-        //userPermissions = defaultUserPermissions.concat(cmd.userPermissions)
+        // defaultBotPermissions = [Permissions.FLAGS.VIEW_CHANNEL, Permissions.FLAGS.SEND_MESSAGES, Permissions.FLAGS.EMBED_LINKS]
+        // defaultUserPermissions = [Permissions.FLAGS.VIEW_CHANNEL, Permissions.FLAGS.SEND_MESSAGES]
+        // botPermissions = defaultBotPermissions.concat(cmd.botPermissions)
+        // userPermissions = defaultUserPermissions.concat(cmd.userPermissions)
 
-        let validPermissions = true;
+        let validPermissions = true
         if (cmd.botPermissions && cmd.botPermissions.length > 0) {
             validPermissions &= checkForMissingPermissions(message,
                 message.guild.me, message.guild.me.user.username, cmd.botPermissions)
@@ -71,7 +70,6 @@ async function commandHandler(client, message) {
         if (validPermissions) {
             await cmd.execute(message, args)
         }
-
     } catch (error) {
         console.error(error)
         message.channel.sendError(`There was an unexpected error trying to execute the command ${command}!`)

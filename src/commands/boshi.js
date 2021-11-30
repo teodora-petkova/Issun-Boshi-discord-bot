@@ -6,13 +6,13 @@ module.exports = {
     description: '!boshi greets with a random emoji',
     usage: '!boshi',
 
-    execute(message, args) {
+    execute (message, args) {
         const replies = ['💖', ':blossom:', ':star:']
 
         const embeddedMessage = new Discord.MessageEmbed()
-            .setTitle("Greetings!")
+            .setTitle('Greetings!')
             .setDescription(getRandom(replies))
-            .setColor("00ff00")
+            .setColor('00ff00')
         message.channel.sendEmbed(embeddedMessage)
     }
 }

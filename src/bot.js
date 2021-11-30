@@ -1,5 +1,4 @@
-//console.log('Beep beep! 🤖')
-const { parsed, error } = require('dotenv').config()
+require('dotenv').config()
 const Discord = require('discord.js')
 const commandsjs = require('./commands.js')
 const schedulejs = require('./commands/schedule.js')
@@ -7,7 +6,7 @@ const mongo = require('./db/mongo.js')
 
 const client = new Discord.Client()
 
-function loginBot() {
+function loginBot () {
     client.login(process.env.BOTTOKEN)
 
     mongo.connect()
@@ -21,12 +20,12 @@ function loginBot() {
 }
 
 // if the node process ends, close the Mongoose connection
-function handle(signal) {
+function handle (signal) {
     mongo.disconnect()
-    console.log(`Received ${signal}`);
+    console.log(`Received ${signal}`)
 }
 
-function logoutBot() {
+function logoutBot () {
     process.on('SIGINT', handle)
     process.on('SIGTERM', handle)
 }

@@ -11,7 +11,7 @@ const userCommandsUsageSchema = mongoose.Schema({
             _id: mongoose.Schema.Types.ObjectId,
             name: requiredString,
             count: number,
-            date: requiredDate,
+            date: requiredDate
         }]
 })
 
