@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+mongoose.set('useCreateIndex', true)
 
 const ScheduledMessageSchema = require('./scheduled-message-schema.js')
 const UserModel = require('./user-schema.js')
