@@ -1,0 +1,52 @@
+use('discord-bot-db');
+
+//db.users.drop()
+
+
+/*
+db.users.updateOne(
+    {
+        id:'587336629161558039',
+        guildId:'853903363379822613',
+        channelId:'876455475443531786',
+        'commands.name':'boshi'
+    },
+    {
+        $inc: {'commands.$.callsCount': 1}
+    })
+*/
+db.users.find()
+db.commands.find()
+/*
+db.users.insertOne(
+    {
+    "id": "587336629161558039",
+    "name": "tedi",
+    "guildId": "853903363379822613",
+    "guildName": "demo_server",
+    "channelId": "876455475443531786",
+    "channelName": "private-channel-2",
+    "commands": [
+      {
+        "name": "boshi",
+        "callsCount": 2,
+        "createdAt": {
+          "$date": "2021-12-01T15:10:59.070Z"
+        }
+      }
+    ]
+  }
+)
+
+db.users.updateOne(
+    {
+        name:"tedi",
+        'commands.name':"boshi"
+    },
+    {
+        $inc: {'commands.$.callsCount': -1}
+    })
+
+    
+db.users.find( {} )
+*/

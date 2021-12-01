@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 
 const ScheduledMessageSchema = require('./scheduled-message-schema.js')
-const UserCommandsUsageSchema = require('./user-commands-usage-schema.js')
+const UserModel = require('./user-schema.js')
 
 function getMessageId (message) {
     return `id:'${message._id}' date:'${message.date}'`
@@ -134,33 +134,37 @@ async function removeReminderFromScheduledMessage (scheduledMessage, reminder) {
     }
 }
 
-//  max 3 for a day - added one with the call of the command + 2 more
-const maxCountPerDay = 2
-function initUserCommand (commandName, date) {
+function getUserId (userData) {
+    return `name:'${userData.name}' guild:'${userData.guildName}' channel: '${userData.channelName}'` // \
+// (id:'${userData.id}' guildId:'${userData.guildId}' channelId: '${userData.channelId}')`
+}
+
+//  max 3 calls for a day - added one with the call of the command + 2 more
+const maxCallsCountPerDay = 2
+function initUserCommand (commandName) {
     return {
         _id: generateId(),
         name: commandName,
-        date: date,
-        count: maxCountPerDay
+        callsCount: maxCallsCountPerDay
     }
 }
 
-async function getUser (userId, guildId, channelId) {
+async function getUser (userData) {
     let user
     try {
-        user = await UserCommandsUsageSchema
+        user = await UserModel
             .findOne({
-                userId: userId,
-                guildId: guildId,
-                channelId: channelId
+                id: userData.id,
+                guildId: userData.guildId,
+                channelId: userData.channelId
             })
     } catch (err) {
-        console.error(err, `An error while retrieving the user '${userId}' from DB`)
+        console.error(err, `An error while retrieving the user ${getUserId(userData)} from DB`)
     }
     if (user) {
-        console.log(`User '${userId}' is found in DB.`)
+        console.log(`User ${getUserId(userData)} is found in DB.`)
     } else {
-        console.log(`User '${userId}' cannot be found in DB.`)
+        console.log(`User ${getUserId(userData)} cannot be found in DB.`)
     }
     return user
 }
@@ -170,124 +174,126 @@ function getUserCommand (user, commandName) {
     try {
         command = user.commands.find(c => c.name === commandName)
     } catch (err) {
-        console.error(err, `An error while retrieving the command '${commandName}' for the user '${user.userId}' from DB.`)
+        console.error(err, `An error while retrieving the command '${commandName}' for the user '${user.fullId}' from DB.`)
     }
     if (command) {
-        console.log(`The command '${commandName}' for the user '${user.userId}' is found in DB.`)
+        console.log(`The command '${commandName}' for the user '${user.fullId}' is found in DB.`)
     } else {
-        console.log(`The command '${commandName}' for the user '${user.userId}' cannot be found.`)
+        console.log(`The command '${commandName}' for the user '${user.fullId}' cannot be found.`)
     }
     return command
 }
 
-async function addUserWithCommand (userId, guildId, channelId,
-    commandName, date) {
-    const newUserCommandsUsage = {
+async function addUserWithCommand (userData, commandName) {
+    const newUser = {
         _id: generateId(),
-        userId: userId,
-        guildId: guildId,
-        channelId: channelId,
-        commands: [initUserCommand(commandName, date)]
+        id: userData.id,
+        name: userData.name,
+        guildId: userData.guildId,
+        guildName: userData.guildName,
+        channelId: userData.channelId,
+        channelName: userData.channelName,
+        commands: [initUserCommand(commandName)]
     }
 
     try {
-        const saveResult = await new UserCommandsUsageSchema(newUserCommandsUsage).save()
+        const saveResult = await new UserModel(newUser).save()
 
         if (saveResult) {
-            console.log(`User '${userId}' with command:'${commandName}' is added in DB.`)
+            console.log(`User ${getUserId(userData)} with command:'${commandName}' is added in DB.`)
         }
     } catch (err) {
-        console.error(err, `An error while adding an user '${userId}' with a command '${commandName}'.`)
+        console.error(err, `An error while adding an user ${getUserId(userData)} with a command '${commandName}'.`)
     }
 }
 
-async function addCommandForUser (userId, guildId, channelId,
-    commandName, date) {
+async function addCommandForUser (userData, commandName) {
     let updateOneResult
     try {
-        updateOneResult = await UserCommandsUsageSchema
+        updateOneResult = await UserModel
             .updateOne(
                 {
-                    userId: userId,
-                    guildId: guildId,
-                    channelId: channelId,
-                    'commands.name': commandName
+                    id: userData.id,
+                    guildId: userData.guildId,
+                    channelId: userData.channelId
                 },
-                { $push: { commands: [initUserCommand(commandName, date)] } })
+                {
+                    $set: { modifiedAt: Date.now() },
+                    $push: { commands: [initUserCommand(commandName)] }
+                })
     } catch (err) {
-        console.error(err, `An error while adding the command '${commandName}' for the user '${userId}'.`)
+        console.error(err, `An error while adding the command '${commandName}' for the user ${getUserId(userData)}.`)
     }
     if (updateOneResult.ok === 1) {
         if (updateOneResult.n === 1 &&
             updateOneResult.nModified === 1) {
-            console.log(`The command '${commandName}' for the user '${userId}' is added in DB.`)
+            console.log(`The command '${commandName}' for the user ${getUserId(userData)} is added in DB.`)
         } else {
-            console.log(`No user '${userId}' is found and no command is added in DB.`)
+            console.log(`No command '${commandName}' for the ${getUserId(userData)} is added in DB.`)
         }
     } else {
-        console.log(`Unsuccessful operation: updateOne with adding a new command '${commandName}' for the user '${userId}'.`)
+        console.log(`Unsuccessful operation: updateOne with adding a new command '${commandName}' for the user ${getUserId(userData)}.`)
     }
 }
 
-async function decrementCommandUsesCount (userId, guildId, channelId,
-    commandName) {
+async function decrementCommandUsesCount (userData, commandName) {
     let updateOneResult
     try {
-        updateOneResult = await UserCommandsUsageSchema
+        updateOneResult = await UserModel
             .updateOne(
                 {
-                    userId: userId,
-                    guildId: guildId,
-                    channelId: channelId,
+                    id: userData.id,
+                    guildId: userData.guildId,
+                    channelId: userData.channelId,
                     'commands.name': commandName
                 },
-                { $inc: { 'commands.$.count': -1 } })
+                { $inc: { 'commands.$.callsCount': -1 } })
     } catch (err) {
-        console.error(err, `An error while decrementing the count of uses of the command '${commandName}' for the user '${userId}' in DB.`)
+        console.error(err, `An error while decrementing the count of uses of the command '${commandName}' for the user ${getUserId(userData)} in DB.`)
     }
 
     if (updateOneResult.ok === 1) {
         if (updateOneResult.n === 1 &&
             updateOneResult.nModified === 1) {
-            console.log(`The count of command '${commandName}' for the user '${userId}' is decremented in DB.`)
+            console.log(`The count of command '${commandName}' for the user ${getUserId(userData)} is decremented in DB.`)
         } else {
-            console.log(`No command '${commandName}' for the user '${userId}' is found and updated in DB.`)
+            console.log(`No command '${commandName}' for the user ${getUserId(userData)} is updated in DB.`)
         }
     } else {
-        console.log(`Unsuccessful operation: updateOne for the command '${commandName}' for the user '${userId}'.`)
+        console.log(`Unsuccessful operation: updateOne for the command '${commandName}' for the user ${getUserId(userData)}'.`)
     }
 }
 
-async function resetCommandForUser (userId, guildId, channelId,
-    commandName, date) {
+async function resetCommandForUser (userData, commandName, date) {
     let updateOneResult
     try {
-        updateOneResult = await UserCommandsUsageSchema
+        updateOneResult = await UserModel
             .updateOne(
                 {
-                    userId: userId,
-                    guildId: guildId,
-                    channelId: channelId,
+                    id: userData.id,
+                    guildId: userData.guildId,
+                    channelId: userData.channelId,
                     'commands.name': commandName
                 },
                 {
                     $set:
                     {
-                        'commands.$.date': date,
-                        'commands.$.count': maxCountPerDay
+                        modifiedAt: Date.now,
+                        'commands.$.createdAt': Date.now,
+                        'commands.$.callsCount': maxCallsCountPerDay
                     }
                 })
     } catch (err) {
-        console.error(err, `An error while reseting the count of uses of the command:'${commandName}' for the user '${userId}' in DB.`)
+        console.error(err, `An error while reseting the count of uses of the command:'${commandName}' for the user ${getUserId(userData)} in DB.`)
     } if (updateOneResult.ok === 1) {
         if (updateOneResult.n === 1 &&
             updateOneResult.nModified === 1) {
-            console.log(`The command '${commandName}' for the user '${userId}' is reset with the max count and the current date in DB.`)
+            console.log(`The command '${commandName}' for the user ${getUserId(userData)} is reset with the max count and the current date in DB.`)
         } else {
-            console.log(`No user '${userId}' is found and no command is updated in DB.`)
+            console.log(`No user ${getUserId(userData)} is found and no command is updated in DB.`)
         }
     } else {
-        console.log(`Unsuccessful operation: updateOne for reseting the command '${commandName}' for the user '${userId}'.`)
+        console.log(`Unsuccessful operation: updateOne for reseting the command '${commandName}' for the user ${getUserId(userData)}.`)
     }
 }
 

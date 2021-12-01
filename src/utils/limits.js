@@ -2,37 +2,40 @@ const moment = require('../utils/moment.js')
 const mongo = require('../db/mongo.js')
 
 async function isDailyLimitForCommandReached (message, commandName) {
-    const userId = message.author.id
-    const guildId = message.guild.id
-    const channelId = message.channel.id
-    const date = moment.now()
+    const userData = {
+        id: message.author.id,
+        name: message.author.username,
+        guildId: message.guild.id,
+        guildName: message.guild.name,
+        channelId: message.channel.id,
+        channelName: message.channel.name
+    }
 
     let isDailyLimitReached = false
 
-    const user = await mongo.getUser(userId, guildId, channelId)
-    if (user === undefined) {
-        await mongo.addUserWithCommand(userId, guildId, channelId,
-            commandName, date)
+    const user = await mongo.getUser(userData)
+    if (user === null) {
+        await mongo.addUserWithCommand(userData, commandName)
     } else {
         const command = mongo.getUserCommand(user, commandName)
         if (command != null) {
-            if (command.count > 0) {
-                await mongo.decrementCommandUsesCount(userId, guildId, channelId, commandName)
+            if (command.callsCount > 0) {
+                await mongo.decrementCommandUsesCount(userData, commandName)
             } else {
-                if (moment.getDiffWithTodayInDays(command.date) >= 1) {
-                    await mongo.resetCommandForUser(userId, guildId, channelId, commandName, date)
+                if (moment.getDiffWithTodayInDays(command.createdAt) >= 1) {
+                    await mongo.resetCommandForUser(userData, commandName)
                 } else {
                     isDailyLimitReached = true
                 }
             }
         } else {
-            await mongo.addCommandForUser(userId, guildId, channelId, commandName, date)
+            await mongo.addCommandForUser(userData, commandName)
         }
     }
 
     if (isDailyLimitReached) {
-        message.channel.sendError(`@${message.author.username}, you have reached the limit of calls to '${commandName}' for the day!`)
-        console.log(`User "${message.author.id}" has reached the limit of calls to '${commandName}' for the day.`)
+        message.channel.sendError(`@${userData.name}, you have reached the limit of calls to '${commandName}' for the day!`)
+        console.log(`User @${userData.name} (id:${userData.id}) has reached the limit of calls to '${commandName}' for the day.`)
     }
 
     return isDailyLimitReached
