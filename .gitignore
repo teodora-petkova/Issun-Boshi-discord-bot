@@ -8,3 +8,4 @@ corde.config.json
 tsconfig.json
 yarn.lock
 package.json_for_tests
+testdb.mongodb
