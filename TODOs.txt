@@ -52,7 +52,20 @@ New ideas and functionality:
           @Liybo - Ninja
           @Yasi - Superhero
           ..................
-        
+
+- an idea for welcoming new people and assigning a role for them based on an invitation code e.g. `Welcome @Ani :wave:! You are our new valuable @shinobi!` :D
+    = useful links:
+      - https://discordpy.readthedocs.io/en/latest/api.html#invite%C2%A0 
+      - https://support.discord.com/hc/en-us/community/posts/360058433271-Add-invite-data-to-user-joined-event
+      - https://www.youtube.com/watch?v=lfsfga-YxzI
+      - https://www.youtube.com/watch?v=my2F7ntvxb0
+      - https://top.gg/bot/720351927581278219 (but the invites commands is paid?)  
+    = how:
+      -an example of the command: !invite <code> @role for each new role you want to connect with a code of an invitation
+      -after that when an user comes into the server, the bot will assign the user with the role and will welcome him as the new role
+      -the pairs of code and roles may be in mongo db 
+      or they can be defined in google drive and then there won't be need for a command invite?
+
 - a moderation functionality - the bot will be looking for following strictly the rules :D - no too much pictures in the common channel or too much English words/whole sentences
     = an example: https://mee6.xyz/moderation
     = how:
