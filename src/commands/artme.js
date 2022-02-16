@@ -1,54 +1,25 @@
 const Discord = require('discord.js')
 const fetch = require('node-fetch')
 require('dotenv').config()
-const { google } = require('googleapis')
+const googledrive = require('../utils/googledrive.js')
 const { isEmpty, getRandom } = require('../utils/utils.js')
 const limits = require('../utils/limits.js')
 
-async function getAllFileIdsByFolderName (resource) {
-    const drive = google.drive({ version: 'v3', auth: resource.auth })
+/*
+The root picture prompts folder with subfolders for the different prompts (the folder structure):
+    - picture prompts
+        - clothing
+        - hands
+        - palette
+ */
+async function getAllFileIdsByFolderName (rootPromptsFolderId) {
+    const filesByFolderName = []
 
-    async function executeQuery (query, fields) {
-        const params = {
-            q: query,
-            fields: fields,
-            orderBy: 'name',
-            pageSize: 1000,
-            pageToken: '',
-            includeItemsFromAllDrives: true,
-            supportsAllDrives: true
-        }
-
-        const res = await drive.files.list(params)
-        return res
+    const foldersByPrompt = await googledrive.getFolders(rootPromptsFolderId)
+    for (const folder of foldersByPrompt) {
+        const files = await googledrive.getFiles(folder.id)
+        filesByFolderName[folder.name] = files.map(file => file.id)
     }
-
-    async function getFiles (folderId) {
-        const params = {
-            q: "'" + folderId + "' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed=false",
-            fields: 'files(createdTime,description,id,mimeType,modifiedTime,name,owners,parents,permissions,shared,size,webContentLink,webViewLink),nextPageToken'
-        }
-        const res = await executeQuery(params.q, params.fields)
-        return res.data.files.map(f => f.id)
-    }
-
-    async function getFilesInFolders (folderId) {
-        const filesByFolderName = []
-
-        const params = {
-            q: "'" + folderId + "' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false",
-            fields: 'files(id,mimeType,name,parents,size),nextPageToken'
-        }
-
-        const res = await executeQuery(params.q, params.fields)
-        for (const folder of res.data.files) {
-            const files = await getFiles(folder.id)
-            filesByFolderName[folder.name] = files
-        }
-        return filesByFolderName
-    }
-
-    const filesByFolderName = await getFilesInFolders(resource.id)
 
     return filesByFolderName
 }
@@ -71,7 +42,7 @@ async function showPrompts (message, prompt, imageIdsByFolderName) {
         message.channel.sendError('No available images found!')
     } else {
         const imageId = getRandom(images)
-        const imageUrl = `https://drive.google.com/uc?export=view&id=${imageId}`
+        const imageUrl = googledrive.getFileUrl(imageId)
         const embeddedMessage = new Discord.MessageEmbed()
             .setTitle('Challenge Prompt :art:')
             .setURL(imageUrl)
@@ -119,14 +90,10 @@ module.exports = {
     async execute (message, args) {
         const commandName = this.name
 
-        const resource = {
-            auth: process.env.GOOGLE_API_KEY,
-            id: process.env.GOOGLE_API_FOLDER_ID
-        }
         const [prompt] = args
 
         // take all folder names as possible prompts (if new folders are added that are not present in the current version of predefined prompts)
-        const imageIdsByFolderName = await getAllFileIdsByFolderName(resource)
+        const imageIdsByFolderName = await getAllFileIdsByFolderName(process.env.GOOGLE_API_PICTURE_PROMPTS_FOLDER_ID)
         availablePrompts = [...new Set([...availablePrompts, ...Object.keys(imageIdsByFolderName)])]
 
         if (!isEmpty(prompt) && !availablePrompts.includes(prompt)) {

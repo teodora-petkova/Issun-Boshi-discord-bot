@@ -14,7 +14,10 @@ function loginBot () {
     // reschedule all messages on restart of the server
     schedulejs.rescheduleAllMessages(client)
 
-    client.on('ready', () => console.log('💖'))
+    client.on('ready', () => {
+        console.log('💖')
+    })
+
     client.commands = commandsjs.getCommands()
     client.on('message', async (message) => await commandsjs.commandHandler(client, message))
 }
