@@ -1,5 +1,5 @@
 const { Permissions, MessageEmbed } = require('discord.js')
-const { isEmpty, getRandom } = require('../utils/utils.js')
+const utils = require('../utils/utils.js')
 
 async function getValidMessage (messageId, message) {
     let messageData = null
@@ -9,10 +9,6 @@ async function getValidMessage (messageId, message) {
         console.error(error)
     }
     return messageData
-}
-
-function getAllChannelUsers (messageChannel) {
-    return messageChannel.members.filter(m => m.id && m.user.bot === false).array()
 }
 
 async function getReactedUserIds (messageData) {
@@ -28,11 +24,11 @@ async function getReactedUserIds (messageData) {
     return uniqueReactedUsersIds
 }
 
-function getMissingUserIds (allChannelUsers, reactedUsersIds, messageCallerId) {
+function getMissingUserIds (allChannelUsers, reactedUsersIds) {
     const missingUsersIds = []
 
     for (const user of allChannelUsers) {
-        if (!reactedUsersIds.includes(user.id) && user.id !== messageCallerId) {
+        if (!reactedUsersIds.includes(user.id)) {
             missingUsersIds.push(`<@${user.id}>`)
         }
     }
@@ -48,7 +44,7 @@ module.exports = {
     async execute (message, args) {
         const [messageId] = args
 
-        if (isEmpty(messageId)) {
+        if (utils.isEmpty(messageId)) {
             message.channel.sendError('You must provide a valid message id!')
             return
         }
@@ -59,9 +55,9 @@ module.exports = {
             return
         }
 
-        const allChannelUsers = getAllChannelUsers(message.channel)
+        const allChannelUsers = utils.getAllChannelUsers(message.channel, message.author.id)
         const reactedUsersIds = await getReactedUserIds(messageData)
-        const missingUsersIds = getMissingUserIds(allChannelUsers, reactedUsersIds, message.author.id)
+        const missingUsersIds = getMissingUserIds(allChannelUsers, reactedUsersIds)
 
         if (missingUsersIds.length === 0) {
             const embeddedMessage = new MessageEmbed()
@@ -83,7 +79,7 @@ module.exports = {
             const embeddedMessage = new MessageEmbed()
                 .setTitle('Read the message :loudspeaker:')
                 .setDescription(`Read and react to the [message](${messageData.url}) with an emoji!`)
-                .setImage(getRandom(shameTenorGifs))
+                .setImage(utils.getRandom(shameTenorGifs))
                 .setURL(messageData.url)
                 .setColor('ff0000')
             message.channel.sendEmbed(embeddedMessage)

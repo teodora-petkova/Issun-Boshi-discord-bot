@@ -1,5 +1,5 @@
 const Discord = require('discord.js')
-const { isEmpty } = require('../utils/utils.js')
+const utils = require('../utils/utils.js')
 
 function getValidVoiceChannel (origVoiceChannelName, message) {
     let voiceChannelId = origVoiceChannelName
@@ -26,7 +26,7 @@ module.exports = {
     async execute (message, args) {
         const [voiceChannelName] = args
 
-        if (isEmpty(voiceChannelName)) {
+        if (utils.isEmpty(voiceChannelName)) {
             message.channel.sendError('You must provide a valid voice channel!')
             return
         }
@@ -44,7 +44,7 @@ module.exports = {
             presentMemberIds = voiceChannel.members.map(m => m.id)
         }
 
-        const members = message.channel.members.filter(m => m.id && m.user.bot === false).array()
+        const members = utils.getAllChannelUsers(message.channel, message.author.id)
         for (const member of members) {
             if (!presentMemberIds.includes(member.id)) {
                 missingMemberIds.push(`<@${member.id}>`)
@@ -58,10 +58,14 @@ module.exports = {
                 .map(m => ':fire:' + m)
                 .join('\n')
             const embeddedMessage = new Discord.MessageEmbed()
-                .setTitle('Call :loudspeaker:')
-                .setDescription(`Come in the voice chat "<#${voiceChannel.id}>"!\n${members}`)
+                .setTitle('Join the call! :loudspeaker:')
+                .setImage('https://c.tenor.com/wGt4RRof83gAAAAC/agnes-please-pick-up-the-phone.gif')
+                .setDescription(`Come in the voice channel "<#${voiceChannel.id}>"!`)
                 .setColor('ff0000')
             message.channel.sendEmbed(embeddedMessage)
+
+            // pings of mentioned roles and users do not work inside an embedded message!
+            message.channel.send(`${members}`)
         }
     }
 }
