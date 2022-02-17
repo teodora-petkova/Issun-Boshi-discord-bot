@@ -1,5 +1,6 @@
 const { MessageEmbed } = require('discord.js')
-const utils = require('../utils/utils.js')
+const { getRandom } = require('../utils/utils.js')
+const { getAllChannelUsers } = require('../utils/discordutils.js')
 
 module.exports = {
     name: 'choose',
@@ -7,8 +8,8 @@ module.exports = {
     usage: '!choose',
 
     async execute (message) {
-        const allChannelUsers = utils.getAllChannelUsers(message.channel, message.author.id)
-        const chosenUser = utils.getRandom(allChannelUsers)
+        const allChannelUsers = getAllChannelUsers(message.channel, message.author.id)
+        const chosenUser = getRandom(allChannelUsers)
 
         if (chosenUser) {
             const embeddedMessage = new MessageEmbed()

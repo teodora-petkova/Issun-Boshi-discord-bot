@@ -1,5 +1,6 @@
 const Discord = require('discord.js')
-const utils = require('../utils/utils.js')
+const { isEmpty } = require('../utils/utils.js')
+const { getAllChannelUsers } = require('../utils/discordutils.js')
 
 function getValidVoiceChannel (origVoiceChannelName, message) {
     let voiceChannelId = origVoiceChannelName
@@ -26,7 +27,7 @@ module.exports = {
     async execute (message, args) {
         const [voiceChannelName] = args
 
-        if (utils.isEmpty(voiceChannelName)) {
+        if (isEmpty(voiceChannelName)) {
             message.channel.sendError('You must provide a valid voice channel!')
             return
         }
@@ -44,7 +45,7 @@ module.exports = {
             presentMemberIds = voiceChannel.members.map(m => m.id)
         }
 
-        const members = utils.getAllChannelUsers(message.channel, message.author.id)
+        const members = getAllChannelUsers(message.channel, message.author.id)
         for (const member of members) {
             if (!presentMemberIds.includes(member.id)) {
                 missingMemberIds.push(`<@${member.id}>`)

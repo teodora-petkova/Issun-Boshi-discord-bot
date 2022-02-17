@@ -1,5 +1,6 @@
 const { Permissions, MessageEmbed } = require('discord.js')
-const utils = require('../utils/utils.js')
+const { isEmpty, getRandom } = require('../utils/utils.js')
+const { getAllChannelUsers } = require('../utils/discordutils.js')
 
 async function getValidMessage (messageId, message) {
     let messageData = null
@@ -44,7 +45,7 @@ module.exports = {
     async execute (message, args) {
         const [messageId] = args
 
-        if (utils.isEmpty(messageId)) {
+        if (isEmpty(messageId)) {
             message.channel.sendError('You must provide a valid message id!')
             return
         }
@@ -55,7 +56,7 @@ module.exports = {
             return
         }
 
-        const allChannelUsers = utils.getAllChannelUsers(message.channel, message.author.id)
+        const allChannelUsers = getAllChannelUsers(message.channel, message.author.id)
         const reactedUsersIds = await getReactedUserIds(messageData)
         const missingUsersIds = getMissingUserIds(allChannelUsers, reactedUsersIds)
 
@@ -79,7 +80,7 @@ module.exports = {
             const embeddedMessage = new MessageEmbed()
                 .setTitle('Read the message :loudspeaker:')
                 .setDescription(`Read and react to the [message](${messageData.url}) with an emoji!`)
-                .setImage(utils.getRandom(shameTenorGifs))
+                .setImage(getRandom(shameTenorGifs))
                 .setURL(messageData.url)
                 .setColor('ff0000')
             message.channel.sendEmbed(embeddedMessage)

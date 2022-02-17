@@ -20,14 +20,9 @@ function getKeyValuePair (inputString, delimiter) {
     }
 }
 
-function getAllChannelUsers (channel, expceptUserId = '') {
-    return channel.members.filter(m => m.id !== expceptUserId && m.user.bot === false).array()
-}
-
 module.exports =
 {
     isEmpty,
     getRandom,
-    getKeyValuePair,
-    getAllChannelUsers
+    getKeyValuePair
 }

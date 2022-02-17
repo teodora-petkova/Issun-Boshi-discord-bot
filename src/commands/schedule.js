@@ -3,6 +3,7 @@ const schedule = require('node-schedule')
 const mongo = require('../db/mongo.js')
 const moment = require('../utils/moment.js')
 const { isEmpty } = require('../utils/utils.js')
+const { getRole } = require('../utils/discordutils.js')
 
 function isValidDateFormat (date) {
     const regex = /\d\d\d\d-\d{1,2}-\d{1,2}/
@@ -17,38 +18,17 @@ function isValidTimeFormat (time) {
 }
 
 function getValidMention (origMention, message) {
-    let mention = origMention
+    const mention = origMention
 
     if (!mention) { return null }
 
-    if (mention.startsWith('<@') && mention.endsWith('>')) {
-        mention = mention.slice(2, -1)
-
-        if (mention.startsWith('!') ||
-            // an user mention <@!user nickname>
-            mention.startsWith('&')) {
-            // a role mention <@&role>
-            mention = mention.slice(1)
-        }
-
-        const user = message.client.users.cache.get(mention)
-        if (!user) {
-            const concatArrays = (a, b) => { return a.concat(b) }
-            const allRoles = message.client.guilds.cache.array().map(g => g.roles.cache.array()).reduce(concatArrays)
-            const role = allRoles.find(r => r.id === mention)
-            if (!role) {
-                message.channel.sendError(`The "${mention}" is an invalid user or role!`)
-                return null
-            }
-        }
-        return origMention
-    } else if (mention === '@everyone' ||
-        mention === '@here') {
-        return mention
-    } else {
+    const role = getRole(mention, message.channel)
+    if (!role) {
         message.channel.sendError(`The "${mention}" is an invalid user or role!`)
         return null
     }
+
+    return origMention
 }
 
 async function getLastMessage (message) {
