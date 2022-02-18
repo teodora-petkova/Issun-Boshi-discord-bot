@@ -1,9 +1,14 @@
 require('dotenv').config()
 const { google } = require('googleapis')
 
+const googleauth = new google.auth.GoogleAuth({
+    keyFile: './credentials.json',
+    scopes: ['https://www.googleapis.com/auth/drive']
+})
+
 const drive = google.drive({
     version: 'v3',
-    auth: process.env.GOOGLE_API_KEY
+    auth: googleauth
 })
 
 async function exportLinesFromFile (fileId) {
