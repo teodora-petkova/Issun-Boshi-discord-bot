@@ -1,3 +1,1 @@
-Credentials: echo ${GOOGLE_CREDENTIALS} > credentials.json
-
-Worker: node ./src/bot.js
+Worker: echo ${GOOGLE_CREDENTIALS} > credentials.json && node ./src/bot.js
