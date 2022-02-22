@@ -7,9 +7,9 @@ function getRole (mention, channel) {
         mention = mention.slice(2, -1)
 
         if (mention.startsWith('!') ||
-            // an user mention <@!user nickname>
+            // an user mention <@!userid>
             mention.startsWith('&')) {
-            // a role mention <@&role>
+            // a role mention <@&roleid>
             mention = mention.slice(1)
         }
         const allRolesForGuild = channel.guild.roles.cache.array()
@@ -22,7 +22,19 @@ function getRole (mention, channel) {
     }
 }
 
+function getUserPing (userId) {
+    // an user mention <@!userid>
+    return `<@!${userId}>`
+}
+
+function getRolePing (roleId) {
+    // a role mention <@&roleid>
+    return `<@&${roleId}>`
+}
+
 module.exports = {
     getAllChannelUsers,
-    getRole
+    getRole,
+    getRolePing,
+    getUserPing
 }
