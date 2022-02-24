@@ -35,7 +35,7 @@ function getCommands () {
     return commands
 }
 
-async function commandHandler (client, message) {
+async function commandHandler (client, message, invitesHandler) {
     if (!message.content.startsWith(prefix) || message.author.bot) return
 
     const args = message.content.slice(prefix.length).trim().split(/ +/)
@@ -68,7 +68,7 @@ async function commandHandler (client, message) {
                 message.member, message.member.user.username, cmd.userPermissions)
         }
         if (validPermissions) {
-            await cmd.execute(message, args)
+            await cmd.execute(message, args, invitesHandler)
         }
     } catch (error) {
         console.error(error)

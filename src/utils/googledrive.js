@@ -1,5 +1,6 @@
 require('dotenv').config()
 const { google } = require('googleapis')
+const utils = require('./utils.js')
 
 const googleauth = new google.auth.GoogleAuth({
     keyFile: './credentials.json',
@@ -10,21 +11,6 @@ const drive = google.drive({
     version: 'v3',
     auth: googleauth
 })
-
-async function exportLinesFromFile (fileId) {
-    let lines = []
-    try {
-        const result = await drive.files.export({
-            fileId: fileId,
-            mimeType: 'text/plain',
-            alt: 'media'
-        })
-        lines = result.data.split('\r\n')
-    } catch (error) {
-        console.error('GoogleDriveAPI: The file cannot be exported! \n' + error)
-    }
-    return lines
-}
 
 async function getFiles (folderId) {
     try {
@@ -59,9 +45,43 @@ function getFileUrl (fileId) {
     return `https://drive.google.com/uc?export=view&id=${fileId}`
 }
 
+async function exportLinesFromFile (fileId) {
+    let lines = []
+    try {
+        const result = await drive.files.export({
+            fileId: fileId,
+            mimeType: 'text/plain',
+            alt: 'media'
+        })
+        lines = result.data.split('\r\n')
+    } catch (error) {
+        console.error('GoogleDriveAPI: The file cannot be exported! \n' + error)
+    }
+    return lines
+}
+
+async function getWelcomeSettings (settingsFileId) {
+    const settings = new Map()
+    if (settingsFileId) {
+        const lines = await exportLinesFromFile(settingsFileId)
+        for (const line of lines) {
+            if (line && line !== '') {
+                const keyValue = utils.getKeyValuePair(line, ':')
+                if (keyValue) {
+                    settings.set(keyValue[0], keyValue[1])
+                }
+            }
+        }
+    } else {
+        console.warn('No file is provided for the welcoming settings.')
+    }
+    return settings
+}
+
 module.exports = {
     getFiles,
     getFolders,
     getFileUrl,
-    exportLinesFromFile
+    exportLinesFromFile,
+    getWelcomeSettings
 }
