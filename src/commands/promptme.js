@@ -32,8 +32,8 @@ async function showPrompt (channel, prompt) {
 
 function getRandomTextPromptForEachCategory (promptsByCategory) {
     let prompt = ''
-    for (const [category, prompts] of Object.entries(promptsByCategory)) {
-        prompt += `:star: ${category} : ${getRandom(prompts)}\n`
+    for (const [, prompts] of Object.entries(promptsByCategory)) {
+        prompt += `:star: ${getRandom(prompts)}\n`
     }
     return prompt
 }

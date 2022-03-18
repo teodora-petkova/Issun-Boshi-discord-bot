@@ -1,11 +1,8 @@
 -----------------------------------------------------------------------------------------------------------------------------
 Ameliorations:
 -----------------------------------------------------------------------------------------------------------------------------
-- to think of a way to delete old records for users commands usage in DB (to read about TTL indices in Mongo DB!!)
-in order not to have too much records at some point for the users that are not using the server or are not in the course anymore
-(maybe query everything on restart (will it be too slow?!) and remove all records with old dates for commands)
-
-- integrate unsplash api for !artme (50 calls per hour), not (only) our google drive examples
+- to make a github page with examples and more thorough descriptions of the commands
+- integrate unsplash api for !artme (50 calls per hour), not (only) our google drive examples?
 
 ----------------------------------------------------------------------------------------------------------------------------
 Export to Raspberry PI (to have in mind):
@@ -19,7 +16,27 @@ Export to Raspberry PI (to have in mind):
 -----------------------------------------------------------------------------------------------------------------------------
 New ideas and functionality:
 -----------------------------------------------------------------------------------------------------------------------------
-- the Liybo's idea for real+digital stickers for #n successfully finished challenges
+- an idea for exercises based on text prompts for characters/emotions/settings etc. - already we have !promptme
+  = description: an idea to make !promptme as an automatic 'weekly' challenge 
+  = how:
+    - to decide how to define the settings, maybe in a google doc - for the time e.g. week and the channel name for the prompts
+    - also maybe not just calling prompt but a combination of !artme + !promptme e.g. text + palette
+
+- an idea for welcoming new people and assigning a role for them based on an invitation code e.g. `Welcome @Ani :wave:! You are our new valuable @shinobi!` :D
+    = useful links:
+      - https://discordpy.readthedocs.io/en/latest/api.html#invite%C2%A0 
+      - https://support.discord.com/hc/en-us/community/posts/360058433271-Add-invite-data-to-user-joined-event
+      - https://www.youtube.com/watch?v=lfsfga-YxzI
+      - https://www.youtube.com/watch?v=my2F7ntvxb0
+      - https://top.gg/bot/720351927581278219 (but the invites commands is paid?)  
+    = how:
+      - it is already done
+      - there is a settings file with invites <code>:<role>
+      BUT still to investigate how to automatically reload the data from the settings and take the correct invitations from Discord server
+      current solution !reload but it is not working well for now
+      to investigate about webhooks!!
+
+- the Liybo's idea for real+digital stickers for #n successfully finished challenges - for now just real stickers! (lowest priority!)
   = description: every user will participate in different challenges and if their count reaches for example 10 challenges, he will receive some stickers/emojis
   = how:
     - add a command <!challenge @Ani @Liybo @Yasi> enumerating all the users that successfully finish the current challenge (at the end of it)
@@ -31,40 +48,6 @@ New ideas and functionality:
     - emojis in discord server by default are 50 custom emojis (with nitro/paid more)
     - api for emojis: https://discord.com/developers/docs/resources/emoji to define the emojis by role
   = to be decided: is it ok to have for example another 3 new roles in the server? 
-
-- an idea for exercises based on text prompts for characters/emotions/settings etc.
-  = description: every user can call an exercise to draw a character based on hero, emotion, setting etc. and a random prompt will show up
-  = how:
-    - an idea for an update for the google drive folder tree:
-          - bot
-             - prompts
-                 - clothing
-                 - hands
-                 - palette
-             - exercises (it will be easier to have txt files!)
-                 - hero.txt
-                 - emotion.txt
-                 - confict.txt
-
-    - a command <!exercise hero> returns -> Fairy, Ninja и т.н.
-    - аnother option: <!еxercise hero @Friends> returns а list/table (excluding the caller!) ->
-          @Ani - Fairy 
-          @Liybo - Ninja
-          @Yasi - Superhero
-          ..................
-
-- an idea for welcoming new people and assigning a role for them based on an invitation code e.g. `Welcome @Ani :wave:! You are our new valuable @shinobi!` :D
-    = useful links:
-      - https://discordpy.readthedocs.io/en/latest/api.html#invite%C2%A0 
-      - https://support.discord.com/hc/en-us/community/posts/360058433271-Add-invite-data-to-user-joined-event
-      - https://www.youtube.com/watch?v=lfsfga-YxzI
-      - https://www.youtube.com/watch?v=my2F7ntvxb0
-      - https://top.gg/bot/720351927581278219 (but the invites commands is paid?)  
-    = how:
-      -an example of the command: !invite <code> @role for each new role you want to connect with a code of an invitation
-      -after that when an user comes into the server, the bot will assign the user with the role and will welcome him as the new role
-      -the pairs of code and roles may be in mongo db 
-      or they can be defined in google drive and then there won't be need for a command invite?
 
 - a moderation functionality - the bot will be looking for following strictly the rules :D - no too much pictures in the common channel or too much English words/whole sentences
     = an example: https://mee6.xyz/moderation
@@ -82,6 +65,8 @@ New ideas and functionality:
     = how:
         - there will be one more role - "everyone_before_accepting_rules" - every new user has that role only with permissions to see the channel with the rules
         - after reading and reacting to the rules, the user will receive the current "everyone" role with the basic permissions
+
+- automatic announcement for the new posts from the site of Manga Academy/facebook page? (again a specific channel for that?)
 
 - Secret Santa (for cards/challenges) - sends DMs? (maybe with a table for the moderator who is calling the method?)
 
