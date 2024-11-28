@@ -22,7 +22,7 @@ class InvitesHandler {
                 this.invites.set(guild.id, new Map(guildInvites.map((invite) => [invite.code, invite.uses])))
 
                 if (this.invites && this.invites.size) {
-                    console.log(`Loaded invites for for the guild name='${guild.name}' id='${guild.id}'!`)
+                    console.log(`Loaded invites for the guild name='${guild.name}' id='${guild.id}'!`)
                 }
             } catch (error) {
                 console.error(`Error occurred while fetching invites for the guild name='${guild.name}' id='${guild.id}' \n` + error)
@@ -59,6 +59,8 @@ class InvitesHandler {
 
                         mainMessage = `Здравей, ${getUserPing(member.user.id)}, \
                             нашият нов и ценен член на ${getRolePing(role.id)}! `
+
+                        console.log(`INFO: Member (${member.user.id}:${member.user.tag}) has entered with '${invite.code}, added role ${role.id}:${role.name}'`)
                     }
                 }
 
